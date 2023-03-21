@@ -4,8 +4,6 @@ FROM ubuntu:latest
 RUN apt update
 RUN apt install opam -y
 RUN apt-get install libexpat1-dev libgtk2.0-dev pkg-config -y
-#RUN opam depext conf-graphviz
-#RUN opam depext proverif
 RUN opam init -y
 RUN opam install proverif -y
 
