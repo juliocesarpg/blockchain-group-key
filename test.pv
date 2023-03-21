@@ -1,0 +1,114 @@
+type skey .
+type point .
+free c:channel.
+free s,rc,ri,Ni,i,M,IDgk,IDc,IDi,dik,dkg:bitstring[private].
+free Mk:skey[private].
+free G,Z1,Z2,Z3:point.
+(*---Cryptographic functions---*)
+fun EC_Add(point,point):point.
+fun EC_Mul(bitstring,point):point.
+fun add(bitstring,bitstring):bitstring.
+fun mul(bitstring,bitstring):bitstring.
+fun concat(bitstring,bitstring ):bitstring.
+fun deconcat(bitstring):bitstring.
+fun H(bitstring):bitstring.
+fun Enc(bitstring,skey):bitstring.
+reduc forall m:bitstring,k:skey;Dec(Enc(m,k),k)=m.
+fun point2str(point):bitstring[typeConverter].
+fun str2point(bitstring):point[typeConverter].
+fun str2key(bitstring):skey[typeConverter].
+fun key2str(skey):bitstring[typeConverter].
+fun point2key(point):skey[typeConverter].
+(*---Queries---*)
+query attacker ( s ).
+query attacker (dik).
+query attacker ( ri ).
+query attacker (rc).
+query attacker (dkg) .
+
+let CA(IDc:bitstring,dc:skey,Qc:point,Mk:skey,Qi:point)=
+(* Individual *)
+let Rc = EC_Mul(rc , G) in           
+let K1 = EC_Mul(rc , Qi) in          
+let C1 = Enc(M , point2key(K1)) in 
+out ( c ,(C1,Rc) );                  
+in (c,(Ri:point, C2:bitstring)) ;
+let K2 = EC_Mul(add(rc,key2str(dc)),EC_Add(Ri,Qi)) in
+let Nii = Dec( C2 , point2key(K2)) in
+let Aux = concat(IDi,H(concat(key2str(Mk),Nii))) in
+let IDik = Enc(Aux,point2key(K2)) in
+let Certi = EC_Add(Ri,Rc) in
+let H1 = H(concat(point2str(Certi),IDik)) in
+let ai = add(key2str(dc),mul(H1,rc)) in
+let M1 = concat(concat(IDik,Ni),concat(IDgk,i)) in
+let C3 = Enc(point2str(K2),str2key(M1)) in
+out (c,(C3,ai));
+(* #Group *)
+in ( c , (Qik:point) ) ;
+let Aux = point2str(EC_Mul(key2str(dc),Qik)) in
+let Ai = H(concat(Aux,IDgk)) in
+let Aux2 = mul(Ai,add(rc,key2str(dc))) in
+let Ki = EC_Mul(Aux2,EC_Add(Qik,Ri)) in
+let Gk = EC_Add(EC_Add(Z1,Z2),Ki) in
+let dkg = H(concat(point2str(Gk),IDgk)) in
+let Qkg = EC_Mul(dkg,G) in
+out (c,(Qkg,ai,EC_Add(Ki,Z1),EC_Add(Ki,Z2),EC_Add(Z1,Z2))).
+
+let Nodei(di:skey, Qi:point,Ni:bitstring,Qc:point) =    
+(* Individual *)
+in ( c , (Rc:point,C1: bitstring) ) ;
+let K1 = EC_Mul(key2str(di),Rc) in
+let M1 = Dec(C1,point2key(K1)) in
+let Ri = EC_Mul(ri,G) in
+let K2 = EC_Mul(add(ri,key2str(di)),EC_Add(Rc,Qc)) in
+let C2 = Enc( Ni , point2key(K2)) in
+out ( c ,(C2,Ri) );      
+in ( c , (C3:bitstring, ai: bitstring) ) ;
+let Mi1 = Dec(C3,point2key(K2)) in
+let IDik = deconcat(Mi1) in
+let Certi = EC_Add(Ri,Rc) in
+let A1 = concat(IDik,point2str(Rc)) in
+let A2 = H(concat(point2str(Certi),A1)) in
+let dik = add(mul(A2,key2str(di)),ai) in
+let Qik = EC_Add(EC_Mul(A2,Certi),Qc) in
+out(c,(Qik,Enc(s,point2key(Qik))));    
+(* Group *)
+in ( c , (Ki_n:point) ) ; (* Ki_n = Gk-Ki =Z1 + Z2 *)
+let Ai1 = H(concat(point2str(EC_Mul(dik,Qc)),IDgk)) in
+let Ki = EC_Mul(mul(Ai1,add(dik,ri)),EC_Add(Qc,Rc)) in
+let Gk1 = EC_Add(Ki_n,Ki) in
+let dkg = H(concat(point2str(Gk1),IDgk)) in
+let Qkg = EC_Add(EC_Mul(A2,Certi),Qc) in
+out(c,(Qkg,Enc(s,point2key(Qkg))));
+0.
+
+process
+new di : skey ;
+new dc : skey ;
+let Qc = EC_Mul(key2str(dc),G) in
+let Qi = EC_Mul(key2str(di),G) in
+((!CA(IDc,dc,Qc,Mk,Qi))|(!Nodei(di,Qi,Ni,Qc)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
